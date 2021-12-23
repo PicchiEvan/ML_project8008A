@@ -114,6 +114,12 @@ begin
 fit!(model_nn_multiple_layer,verbosity=2)
 end
 
+# ╔═╡ abb1e4ae-3c0a-4799-8471-1320385c5384
+train_data_nv
+
+# ╔═╡ 1ae46fff-663c-4e4b-962e-44608e6a6ae4
+md"(Note the auc of 1 which could indicate an overfit of the training set)"
+
 # ╔═╡ f4959863-a81f-479c-bcbd-f477bf924152
 losses(model_nn_multiple_layer,select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday)
 
@@ -121,10 +127,41 @@ losses(model_nn_multiple_layer,select(train_data_nv,Not(:precipitation_nextday))
 losses(model_nn_multiple_layer,select(test_data_nv,Not(:precipitation_nextday)),test_data_nv.precipitation_nextday)
 
 # ╔═╡ 1e189c03-e17f-4622-836a-7f4664f4983c
-md"Hyperparameter tunning. Here we will try to find the optimal epochs, "
+md"Hyperparameter tunning. Here we will try to find the optimal epochs, number of hidden neurons and dropout (in order to reduce overfitting of the training set), we used the following code (we executed in the file Script/NeuralNetwork.jl. The code is:
+```
+modelNN = @pipeline(Standardizer(features =[:ALT_sunshine_4,:ZER_sunshine_1,:ABO_sunshine_4,:CHU_sunshine_4,:DAV_sunshine_4,:SAM_sunshine_4,:ZER_sunshine_4], ignore = true),
+                   NeuralNetworkClassifier(
+                         builder = MLJFlux.Short(σ = sigmoid),optimiser = ADAM(),batch_size = 128,rng = 1))
+
+tuned_modelNN = TunedModel(model = modelNN,
+                          resampling = CV(nfolds = 5),
+                          range = [range(modelNN,:(neural_network_classifier.builder.dropout),values = [0., .1, .2]),
+                                    range(modelNN,:(neural_network_classifier.builder.n_hidden),values = [100,200,300]),
+                                   range(modelNN, :(neural_network_classifier.epochs),values = [50, 100, 150])])
+                                   #,measure = Flux.crossentropy
+
+mach_final_nn = fit!(machine(tuned_modelNN,
+                     select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday),verbosity = 2)
+report(mach_final_nn).best_model
+```
+
+Result : epochs = 50, n_hidden = 100 and dropout = 0.2
+"
+
+# ╔═╡ 993d6dc5-a1ed-4a2c-8ffc-d0a4ab8cfe58
+md"Here we fit this machine :"
 
 # ╔═╡ edc7abb5-666c-4614-a48b-2c18b2d2d757
+model_fit_nn_norm = fit!(machine(@pipeline(Standardizer(features =[:ALT_sunshine_4,:ZER_sunshine_1,:ABO_sunshine_4,:CHU_sunshine_4,:DAV_sunshine_4,:SAM_sunshine_4,:ZER_sunshine_4], ignore = true),
+                   NeuralNetworkClassifier(
+                         builder = MLJFlux.Short(σ = sigmoid,n_hidden = 100,dropout =0.2),optimiser = ADAM(),batch_size = 128,rng = 1, epochs = 50)),select(train_data_nv,Not(:precipitation_nextday)),
+                      train_data_nv.precipitation_nextday))
 
+# ╔═╡ 1652a8ef-a1d2-48f8-b18e-d47f4a29d737
+losses(model_fit_nn_norm,select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday)
+
+# ╔═╡ e549d63f-342e-48d0-8550-de9e7562b9cb
+losses(model_fit_nn_norm,select(test_data_nv,Not(:precipitation_nextday)),test_data_nv.precipitation_nextday)
 
 # ╔═╡ a933250a-247c-4139-978f-8cb047470be4
 md"## Random forest"
@@ -193,6 +230,9 @@ begin
 fit!(model_FT_stand,verbosity=2)
 end
 
+# ╔═╡ 378355c2-213f-4967-bbeb-b664e091c9fb
+md"(Note the auc of 1 which could indicate an overfit of the training set)"
+
 # ╔═╡ 8634e84b-8481-4382-bc93-948a688042ed
 losses(model_FT_stand,select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday)
 
@@ -217,7 +257,7 @@ select(L,Not(:precipitation_nextday)),L.precipitation_nextday),verbosity = 2 )
 report(m2)
 report(m2).best_model
 ```
-$\eta = 0.10000000000000002$ and max_depth = 4 and num_round = 500
+$\eta = 0.10000000000000002$ and max\_depth = 4 and num\_round = 500
 
 (we used the default seed, that is 0)"
 
@@ -227,6 +267,9 @@ md"Now we can fit the XGBoost method with the best param to estimate the test er
 # ╔═╡ 156ab5dc-cdd1-4660-beb0-fba616fca95f
 machine_train = fit!(machine(XGBoostClassifier(num_round =500, max_depth = 4,eta = 0.10000000000000002 ),
  select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday))
+
+# ╔═╡ ddc846a7-84de-42af-85ae-cd1627cdf8b3
+md"(Note the auc of 1 which could indicate an overfit of the training set)"
 
 # ╔═╡ 6a66bc62-567c-4360-8431-c8af12380cc4
 losses(machine_train,select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday)
@@ -1871,12 +1914,17 @@ version = "0.9.1+5"
 # ╠═cd276723-986a-4090-8751-1ae4e43910ff
 # ╟─a7105f94-1131-4d1e-a9b0-2f0314ef02b1
 # ╠═7d20e91b-a6ab-4296-8d55-b6f4df035259
+# ╠═abb1e4ae-3c0a-4799-8471-1320385c5384
+# ╟─1ae46fff-663c-4e4b-962e-44608e6a6ae4
 # ╠═f4959863-a81f-479c-bcbd-f477bf924152
 # ╠═ddbc3718-4986-4d5f-8b2e-f2eb5b07ccf4
 # ╟─1e189c03-e17f-4622-836a-7f4664f4983c
+# ╠═993d6dc5-a1ed-4a2c-8ffc-d0a4ab8cfe58
 # ╠═edc7abb5-666c-4614-a48b-2c18b2d2d757
+# ╠═1652a8ef-a1d2-48f8-b18e-d47f4a29d737
+# ╠═e549d63f-342e-48d0-8550-de9e7562b9cb
 # ╟─a933250a-247c-4139-978f-8cb047470be4
-# ╠═668cc59a-b0aa-40f1-93ce-8b4f41bb7e90
+# ╟─668cc59a-b0aa-40f1-93ce-8b4f41bb7e90
 # ╟─cceb9d7e-60fe-4606-9cfd-949ffb2abca6
 # ╟─16e36a3f-2275-4ae3-bee4-a3b754054674
 # ╠═dae6d75e-e584-401b-8efd-4411911dbb8b
@@ -1884,6 +1932,7 @@ version = "0.9.1+5"
 # ╠═a6087d1c-23ab-4448-bd3e-f2e013905998
 # ╟─56e9551f-1744-46eb-b50c-14536b8a1ce6
 # ╠═ba14166d-bfa0-4ee5-bf65-f9b97c74bf1c
+# ╟─378355c2-213f-4967-bbeb-b664e091c9fb
 # ╠═8634e84b-8481-4382-bc93-948a688042ed
 # ╠═35ea7587-8360-452d-82dc-cfbb1ef2197e
 # ╟─7d42822f-4d74-445c-bdfc-f6424413c9c3
@@ -1891,6 +1940,7 @@ version = "0.9.1+5"
 # ╟─79849cda-5b4f-4d21-b392-8999c2e655d0
 # ╟─a554da27-5c8b-47c6-a045-83cc99be7603
 # ╠═156ab5dc-cdd1-4660-beb0-fba616fca95f
+# ╟─ddc846a7-84de-42af-85ae-cd1627cdf8b3
 # ╠═6a66bc62-567c-4360-8431-c8af12380cc4
 # ╠═cd30266b-6184-4004-904a-9a71fa47b092
 # ╟─07eabfdf-7d0a-4c05-ba49-c6bf4f8aec36
