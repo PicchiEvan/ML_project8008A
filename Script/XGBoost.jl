@@ -25,12 +25,8 @@ m2 = fit!(machine(TunedModel(model = xgb,
                             tuning = Grid(goal = 20),
                             range = [range(xgb, :eta,
                                            lower = 1e-2, upper = .1, scale = :log),
-                                     range(xgb, :max_depth, lower = 2, upper = 500)],measure = auc),
-select(L,Not(:precipitation_nextday)),L.precipitation_nextday),verbosity = 2 )
+                                           range(xgb, :num_round, lower = 50, upper = 500),
+                                     range(xgb, :max_depth, lower = 2, upper = 7)],measure = auc),
+select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday),verbosity = 2 )
 report(m2)
 report(m2).best_model
-
-#pred = predict(m2,test),range(xgb,:seed,values = [0,100,200])
-#DFF = DataFrame(precipitation_nextday = pdf.(pred,true))
-#insertcols!(DFF, 1, :id => 1:nrow(DFF))
-#CSV.write(joinpath(@__DIR__, "ResultXGC.csv"), DFF)

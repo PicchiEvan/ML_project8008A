@@ -211,12 +211,13 @@ m2 = fit!(machine(TunedModel(model = xgb,
                             tuning = Grid(goal = 20),
                             range = [range(xgb, :eta,
                                            lower = 1e-2, upper = .1, scale = :log),
-                                     range(xgb, :max_depth, lower = 2, upper = 500)],measure = auc),
+                                           range(xgb, :num_round, lower = 50, upper = 500),
+                                     range(xgb, :max_depth, lower = 2, upper = 7)],measure = auc),
 select(L,Not(:precipitation_nextday)),L.precipitation_nextday),verbosity = 2 )
 report(m2)
 report(m2).best_model
 ```
-$\eta = 0.10000000000000002$ and max_depth = 500
+$\eta = 0.10000000000000002$ and max_depth = 4 and num_round = 500
 
 (we used the default seed, that is 0)"
 
@@ -224,8 +225,11 @@ $\eta = 0.10000000000000002$ and max_depth = 500
 md"Now we can fit the XGBoost method with the best param to estimate the test error"
 
 # ╔═╡ 156ab5dc-cdd1-4660-beb0-fba616fca95f
-machine_train = fit!(machine(XGBoostClassifier(max_depth = 500,eta = 0.10000000000000002 ),
+machine_train = fit!(machine(XGBoostClassifier(num_round =500, max_depth = 4,eta = 0.10000000000000002 ),
  select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday))
+
+# ╔═╡ 6a66bc62-567c-4360-8431-c8af12380cc4
+losses(machine_train,select(train_data_nv,Not(:precipitation_nextday)),train_data_nv.precipitation_nextday)
 
 # ╔═╡ cd30266b-6184-4004-904a-9a71fa47b092
 losses(machine_train,select(test_data_nv,Not(:precipitation_nextday)),test_data_nv.precipitation_nextday)
@@ -235,7 +239,7 @@ md"***
 And here you can find the model trained for the whole training set and predicted on the test set, which is posted on kaggle"
 
 # ╔═╡ 9aef3857-a4b7-4c63-a629-50d919da2084
-m_xg_tot = fit!(machine(XGBoostClassifier(max_depth = 500,eta = 0.10000000000000002 ),
+m_xg_tot = fit!(machine(XGBoostClassifier(num_round =500,max_depth = 4,eta = 0.10000000000000002 ),
  select(training,Not(:precipitation_nextday)),training.precipitation_nextday))
 
 # ╔═╡ bd5db410-e998-4c52-8fe1-20944f7f8e59
@@ -1887,6 +1891,7 @@ version = "0.9.1+5"
 # ╟─79849cda-5b4f-4d21-b392-8999c2e655d0
 # ╟─a554da27-5c8b-47c6-a045-83cc99be7603
 # ╠═156ab5dc-cdd1-4660-beb0-fba616fca95f
+# ╠═6a66bc62-567c-4360-8431-c8af12380cc4
 # ╠═cd30266b-6184-4004-904a-9a71fa47b092
 # ╟─07eabfdf-7d0a-4c05-ba49-c6bf4f8aec36
 # ╠═9aef3857-a4b7-4c63-a629-50d919da2084
