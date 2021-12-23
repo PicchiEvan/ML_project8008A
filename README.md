@@ -6,6 +6,7 @@ The files you find at the **root** are pluto notebooks (and 2 csv) :
 - Data_vis_pca.jl: Contains the data visualisation and preprocessing (in this file you can also edit the seed for the separation of the "subtraining" and "subtesting" sets) and PCA biplot
 - ResultBestLinear.csv : best result submitted on kaggle for linear classification
 - ResultXGC.csv : Best result submitted on kaggle for XGBoostClassification
+- Machine_learning_Project.pdf : report
 
 In the **Data/** folder you will find :
 - test_data_nv.csv : the test set used to estimate the test error
