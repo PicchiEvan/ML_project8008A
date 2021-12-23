@@ -60,7 +60,7 @@ begin
                                 dropout = 0,
                                 σ = sigmoid),
                          batch_size = 128,
-                         epochs = 50,acceleration= CUDALibs(),rng = 1),
+                         epochs = 50,rng = 1),
                       select(train_data_nv,Not(:precipitation_nextday)),
                       train_data_nv.precipitation_nextday)
 fit!(model_nn_ml,verbosity=2)
