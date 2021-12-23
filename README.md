@@ -18,4 +18,5 @@ In the **Script/** folder you will find different scripts used to find the optim
 - NeuralNetwork.jl:contains hyperparameters optimisation for Neural network
 - RandomTree.jl : contains hyperparameters optimisation (n_tree) for RandomTree method
 - XGBoost.jl : contains hyperparameters optimisation for XGBoostClassifier
-## Version of Julia : 1.6.2
+## Version of Julia : 1.6.2 (the version of the MLCourse environment are the same as the start of the course)
+## Version of pluto : v0.15.1
